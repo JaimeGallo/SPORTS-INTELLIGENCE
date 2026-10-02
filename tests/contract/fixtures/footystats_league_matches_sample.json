@@ -1,0 +1,140 @@
+{
+ "league-matches": [
+  {
+   "success": true,
+   "pager": {
+    "current_page": 1,
+    "max_page": 2,
+    "results_per_page": 2,
+    "total_results": 4
+   },
+   "data": [
+    {
+     "id": 9001,
+     "status": "complete",
+     "date_unix": 1710086400,
+     "home_name": "Club Ficticio 1",
+     "away_name": "Club Imaginario 1",
+     "homeGoalCount": 2,
+     "awayGoalCount": 1,
+     "ht_goals_team_a": 1,
+     "ht_goals_team_b": 0,
+     "team_a_corners": 6,
+     "team_b_corners": 3,
+     "team_a_fh_corners": 4,
+     "team_b_fh_corners": 1,
+     "team_a_shots": 12,
+     "team_b_shots": 8,
+     "team_a_shotsOnTarget": 5,
+     "team_b_shotsOnTarget": 2,
+     "odds_ft_over25": 2.1,
+     "odds_ft_under25": 1.72,
+     "odds_corners_over_95": 1.9,
+     "odds_corners_under_95": 1.85,
+     "odds_1st_half_over05": 1.4,
+     "odds_1st_half_under05": 0
+    },
+    {
+     "id": 9002,
+     "status": "complete",
+     "date_unix": 1710172800,
+     "home_name": "Club Ficticio 2",
+     "away_name": "Club Imaginario 2",
+     "homeGoalCount": 2,
+     "awayGoalCount": 1,
+     "ht_goals_team_a": 1,
+     "ht_goals_team_b": 0,
+     "team_a_corners": 6,
+     "team_b_corners": 3,
+     "team_a_fh_corners": -1,
+     "team_b_fh_corners": -1,
+     "team_a_shots": 12,
+     "team_b_shots": 8,
+     "team_a_shotsOnTarget": 5,
+     "team_b_shotsOnTarget": 2,
+     "odds_ft_over25": 2.1,
+     "odds_ft_under25": 1.72,
+     "odds_corners_over_95": 1.9,
+     "odds_corners_under_95": 1.85,
+     "odds_1st_half_over05": 1.4,
+     "odds_1st_half_under05": 0,
+     "team_a_corner_timings": [
+      "10",
+      "33",
+      "45+2",
+      "50",
+      "77",
+      "90+1"
+     ],
+     "team_b_corner_timings": "12,60,88"
+    }
+   ]
+  },
+  {
+   "success": true,
+   "pager": {
+    "current_page": 2,
+    "max_page": 2,
+    "results_per_page": 2,
+    "total_results": 4
+   },
+   "data": [
+    {
+     "id": 9003,
+     "status": "complete",
+     "date_unix": 1710259200,
+     "home_name": "Club Ficticio 3",
+     "away_name": "Club Imaginario 3",
+     "homeGoalCount": 2,
+     "awayGoalCount": 1,
+     "ht_goals_team_a": 1,
+     "ht_goals_team_b": 0,
+     "team_a_corners": 5,
+     "team_b_corners": 3,
+     "team_a_fh_corners": -1,
+     "team_b_fh_corners": -1,
+     "team_a_shots": 12,
+     "team_b_shots": 8,
+     "team_a_shotsOnTarget": 5,
+     "team_b_shotsOnTarget": 2,
+     "odds_ft_over25": 2.1,
+     "odds_ft_under25": 1.72,
+     "odds_corners_over_95": 1.9,
+     "odds_corners_under_95": 1.85,
+     "odds_1st_half_over05": 1.4,
+     "odds_1st_half_under05": 0,
+     "team_a_corner_timings": [
+      "5",
+      "40"
+     ],
+     "team_b_corner_timings": []
+    },
+    {
+     "id": 9004,
+     "status": "incomplete",
+     "date_unix": 1710345600,
+     "home_name": "Club Ficticio 4",
+     "away_name": "Club Imaginario 4",
+     "homeGoalCount": 0,
+     "awayGoalCount": 0,
+     "ht_goals_team_a": 1,
+     "ht_goals_team_b": 0,
+     "team_a_corners": 6,
+     "team_b_corners": 3,
+     "team_a_fh_corners": 4,
+     "team_b_fh_corners": 1,
+     "team_a_shots": 12,
+     "team_b_shots": 8,
+     "team_a_shotsOnTarget": 5,
+     "team_b_shotsOnTarget": 2,
+     "odds_ft_over25": 2.1,
+     "odds_ft_under25": 1.72,
+     "odds_corners_over_95": 1.9,
+     "odds_corners_under_95": 1.85,
+     "odds_1st_half_over05": 1.4,
+     "odds_1st_half_under05": 0
+    }
+   ]
+  }
+ ]
+}

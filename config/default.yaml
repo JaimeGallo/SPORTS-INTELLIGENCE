@@ -18,6 +18,12 @@ competitions:
   - {competition_key: GER-BL, name: Bundesliga, country: GER, football_data_div: D1}
   - {competition_key: FRA-L1, name: Ligue 1, country: FRA, football_data_div: F1}
   - {competition_key: EUR-UCL, name: Champions League, country: EUR, enabled: false}
+  # Liga BetPlay DIMAYOR (ADR-0008). Calendar-year seasons ('2024'), Apertura + Clausura.
+  # Fill the FootyStats season ids with `jevs footystats leagues --country Colombia`.
+  - competition_key: COL-PA
+    name: Categoría Primera A (Liga BetPlay)
+    country: COL
+    footystats_season_ids: {}
 
 ingestion:
   raw_dir: data/raw

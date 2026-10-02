@@ -34,6 +34,8 @@ BOOKMAKERS = {
     "pinnacle": ("Pinnacle", False, True),
     "market_max": ("Market maximum (aggregate)", True, False),
     "market_avg": ("Market average (aggregate)", True, False),
+    # FootyStats does not say which bookmaker or when: stored as an aggregate, used for evaluation only
+    "footystats_reference": ("FootyStats reference odds (bookmaker and timing unverified)", True, False),
 }
 
 
@@ -211,7 +213,10 @@ class HistoricalDataEngine:
 
         for m in report.matches:
             home, away = team_id(m.home_team), team_id(m.away_team)
-            kickoff, known = self.kickoff_utc(m.local_date, m.local_time)
+            if m.kickoff_utc is not None:
+                kickoff, known = m.kickoff_utc.astimezone(UTC), True
+            else:
+                kickoff, known = self.kickoff_utc(m.local_date, m.local_time)
             match_id = canonical_id("match", home, away, m.local_date.isoformat())
             match_rows.append(
                 {

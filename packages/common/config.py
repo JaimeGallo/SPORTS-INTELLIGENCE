@@ -45,6 +45,9 @@ class CompetitionConfig(Section):
     country: str
     enabled: bool = True
     football_data_div: str | None = None  # football-data.co.uk division code (E0, SP1, ...)
+    # FootyStats season ids by canonical season label ('2024' or '2023-2024'); discover them with
+    # `jevs footystats leagues`. Empty = competition not available from FootyStats.
+    footystats_season_ids: dict[str, int] = Field(default_factory=dict)
 
 
 class IngestionSection(Section):
