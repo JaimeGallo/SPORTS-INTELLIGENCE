@@ -1,0 +1,7 @@
+# Market catalog. Adding a market family here (plus a model that can produce its count distribution)
+# must not require changes to the core. Only "total" (over/under on a count) exists in the MVP.
+markets:
+  - {market_key: goals_ft_total,   stat_key: goals,   period: FT, kind: total, lines: [0.5, 1.5, 2.5, 3.5]}
+  - {market_key: goals_1h_total,   stat_key: goals,   period: 1H, kind: total, lines: [0.5, 1.5]}
+  - {market_key: corners_ft_total, stat_key: corners, period: FT, kind: total, lines: [7.5, 8.5, 9.5, 10.5, 11.5]}
+  - {market_key: corners_1h_total, stat_key: corners, period: 1H, kind: total, lines: [2.5, 3.5, 4.5, 5.5]}
