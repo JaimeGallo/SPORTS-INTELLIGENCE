@@ -132,24 +132,31 @@ class FittedModel:
 
 
 class RatingsCache:
-    """Shares one ratings fit across families with the same target, ratings config and as_of."""
+    """Shares ratings fits across families with the same target and ratings config at one as_of.
+
+    Fits for the current as_of are all kept (families iterate over several ratings configs); they are dropped
+    as soon as a later as_of is requested. The previous solution of the same configuration warm-starts the
+    optimizer when the set of teams is unchanged.
+    """
 
     def __init__(self) -> None:
+        self._as_of: datetime | None = None
         self._fits: dict[tuple[Any, ...], TeamRatings] = {}
         self._warm: dict[tuple[Any, ...], tuple[tuple[str, ...], np.ndarray]] = {}
 
     def get(self, history: pd.DataFrame, spec: ModelSpec, as_of: datetime, competition: str) -> TeamRatings:
-        key = (competition, spec.stat, spec.period, spec.ratings, as_of)
+        if as_of != self._as_of:
+            self._fits.clear()
+            self._as_of = as_of
+        key = (competition, spec.stat, spec.period, spec.ratings)
         if key not in self._fits:
             home_col, away_col = target_columns(spec.stat, spec.period)
             data = build_training_data(history, home_col, away_col, as_of, spec.ratings)
-            warm_key = (competition, spec.stat, spec.period, spec.ratings)
             start = None
-            if warm_key in self._warm and self._warm[warm_key][0] == data.teams:
-                start = self._warm[warm_key][1]
+            if key in self._warm and self._warm[key][0] == data.teams:
+                start = self._warm[key][1]
             ratings, theta = fit_ratings(data, spec.ratings, start)
-            self._warm[warm_key] = (data.teams, theta)
-            self._fits.clear()  # only the latest as_of is ever reused
+            self._warm[key] = (data.teams, theta)
             self._fits[key] = ratings
         return self._fits[key]
 
