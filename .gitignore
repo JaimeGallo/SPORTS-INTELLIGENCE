@@ -18,3 +18,7 @@ data/*
 # Node
 node_modules/
 dist/
+
+# Build and generated experiment outputs (published reports are copied to experiments/*/runs/)
+*.egg-info/
+experiments/*/results/

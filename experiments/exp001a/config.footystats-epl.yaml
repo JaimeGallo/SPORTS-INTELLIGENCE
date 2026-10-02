@@ -1,0 +1,52 @@
+# EXP-001a, FootyStats variant (ADR-0008 spike). Same method as config.yaml, different data:
+# - Premier League only, 2018/19 to 2024/25: everything the FootyStats test key exposes.
+# - Adds first-half corners (FootyStats provides them; football-data.co.uk does not).
+# - FootyStats odds have no documented bookmaker or timestamp: stored as closing-only 'footystats_reference'
+#   and used to EVALUATE against the market, never to decide. No pre-match quotes => no paper bets.
+# Not a substitute for the reference run with football-data.co.uk (5 leagues, 2015/16 to 2025/26).
+experiment: exp001a
+provider: footystats
+competitions: [ENG-PL]
+
+seasons:                              # ingested, oldest first
+  - 2018-2019
+  - 2019-2020
+  - 2020-2021
+  - 2021-2022
+  - 2022-2023
+  - 2023-2024
+  - 2024-2025
+predict_seasons:                      # 2018-19 is history only
+  - 2019-2020
+  - 2020-2021
+  - 2021-2022
+  - 2022-2023
+  - 2023-2024
+  - 2024-2025
+validation_seasons: [2020-2021, 2021-2022, 2022-2023]
+test_seasons: [2023-2024, 2024-2025]  # untouched until the final evaluation
+
+targets:
+  - {stat: goals, period: FT, families: [league_freq, poisson, dixon_coles, negbin]}
+  - {stat: goals, period: 1H, families: [league_freq, poisson, negbin]}
+  - {stat: corners, period: FT, families: [league_freq, poisson, negbin]}
+  - {stat: corners, period: 1H, families: [league_freq, poisson, negbin]}
+
+ratings_grid:
+  xi: [0.0, 0.0019, 0.0039]
+  window_days: [730]
+  ridge: [1.0, 4.0]
+  min_matches: 60
+
+calibrators: [identity, platt, isotonic]
+calibration_min_rows: 300
+
+market:
+  market_key: goals_ft_total
+  line: 2.5
+  prematch_bookmakers: []             # FootyStats has no pre-match quotes with known timing
+  closing_bookmakers: [footystats_reference]
+  min_edge: 0.03
+  stake: 1.0
+
+bootstrap: {n: 1000, seed: 7}
