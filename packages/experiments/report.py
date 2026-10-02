@@ -19,6 +19,15 @@ def _pct(value: Any) -> str:
     return "n/d" if value is None else f"{100 * value:.1f}%"
 
 
+def _calibration_status(r: dict[str, Any]) -> str:
+    ece, noise = r.get("ece"), r.get("ece_noise_p95")
+    if ece is None or ece < ECE_TARGET:
+        return "ok"
+    if noise is not None and ece <= noise:
+        return "noise"
+    return "fail"
+
+
 def render_markdown(d: dict[str, Any]) -> str:
     out: list[str] = []
     w = out.append
@@ -74,16 +83,20 @@ def render_markdown(d: dict[str, Any]) -> str:
 
     w("## 3. Test fuera de muestra\n")
     w(
-        "| Mercado | Línea | Familia | Calibrador | N | Tasa real | P media | Brier | Log loss | ECE |\n"
-        "| --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |"
+        "| Mercado | Línea | Familia | Calibrador | N | Tasa real | P media | Brier | Log loss | ECE | Ruido ECE (p95) |\n"
+        "| --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
     )
     for r in sorted(d["test_scores"], key=lambda r: (r["market_key"], r["line"], r["family"])):
-        flag = "" if r["ece"] is None or r["ece"] < ECE_TARGET else " ⚠"
+        flag = {"ok": "", "noise": " ≈", "fail": " ⚠"}[_calibration_status(r)]
         w(
             f"| {r['market_key']} | {r['line']} | {r['family']} | {r['calibrator']} | {r['n']} | {_pct(r['base_rate'])} | "
-            f"{_pct(r['mean_p'])} | {_f(r['brier'])} | {_f(r['log_loss'])} | {_f(r['ece'])}{flag} |"
+            f"{_pct(r['mean_p'])} | {_f(r['brier'])} | {_f(r['log_loss'])} | {_f(r['ece'])}{flag} | {_f(r.get('ece_noise_p95'))} |"
         )
-    w(f"\n⚠ = ECE por encima del objetivo de {ECE_TARGET}.\n")
+    w(
+        f"\n⚠ = ECE por encima del objetivo de {ECE_TARGET} y del ruido de muestreo. "
+        f"≈ = por encima de {ECE_TARGET} pero indistinguible del ruido: un modelo perfectamente calibrado con estas "
+        "mismas probabilidades y este tamaño de muestra mostraría una ECE así al menos el 5% de las veces.\n"
+    )
 
     w("## 4. Modelos frente al baseline ingenuo (test)\n")
     w(
@@ -152,6 +165,7 @@ def render_markdown(d: dict[str, Any]) -> str:
         )
 
     w("## 6. Criterios de éxito\n")
+    statuses = [_calibration_status(r) for r in d["test_scores"]]
     eces = [r["ece"] for r in d["test_scores"] if r["ece"] is not None]
     worst = max(eces) if eces else None
     better = [c for c in d["comparisons_vs_baseline"] if c["log_loss_diff"]["high"] < 0]
@@ -161,9 +175,11 @@ def render_markdown(d: dict[str, Any]) -> str:
         f"`{d['code_version']}`. Verificar re-ejecutando: el `summary.json` debe ser idéntico."
     )
     w(f"2. Sin leakage: **{'cumple' if ok else 'NO cumple'}**.")
+    fails = statuses.count("fail")
     w(
-        f"3. Calibración (ECE < {ECE_TARGET} en test): peor ECE {_f(worst)}: "
-        f"**{'cumple' if worst is not None and worst < ECE_TARGET else 'no cumple en todos los mercados'}**."
+        f"3. Calibración (ECE < {ECE_TARGET} en test, o indistinguible del ruido de muestreo): peor ECE {_f(worst)}; "
+        f"{statuses.count('ok')} combinaciones bajo el objetivo, {statuses.count('noise')} dentro del ruido, "
+        f"{fails} fuera: **{'cumple' if fails == 0 else 'no cumple en todos los mercados'}**."
     )
     w(
         f"4. Frente al baseline: {len(better)} combinaciones mejores, {len(worse)} peores, "

@@ -42,3 +42,10 @@ def test_bootstrap_interval_contains_estimate_and_groups_are_resampled_together(
     assert ci.low < ci.estimate < ci.high
     grouped = mt.bootstrap_mean(values, groups=np.repeat(np.arange(500), 4), n_boot=500, seed=1)
     assert grouped.low < grouped.estimate < grouped.high
+
+
+def test_ece_noise_reference_bounds_a_calibrated_model() -> None:
+    p, y = _sample(800, 4)
+    reference = mt.ece_noise_reference(p, seed=1)
+    assert 0.01 < reference < 0.08  # small samples have noticeable ECE even when calibrated
+    assert mt.expected_calibration_error(p, y) <= reference

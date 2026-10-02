@@ -249,7 +249,9 @@ def run(
     # 5) test evaluation of the selected variants only
     test = final[final["split"] == "test"]
     test_scores = ev.score_table(
-        test, ["target", "family", "model_version", "calibrator", "market_key", "line"]
+        test,
+        ["target", "family", "model_version", "calibrator", "market_key", "line"],
+        with_noise_reference=True,
     )
     comparisons: list[dict[str, Any]] = []
     for target, group in selected.groupby("target"):

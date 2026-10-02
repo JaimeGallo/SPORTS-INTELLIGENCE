@@ -51,7 +51,9 @@ def calibrate_walk_forward(
     return pd.concat(out, ignore_index=True) if out else pred.iloc[0:0]
 
 
-def score_table(calibrated: pd.DataFrame, by: Sequence[str]) -> pd.DataFrame:
+def score_table(
+    calibrated: pd.DataFrame, by: Sequence[str], *, with_noise_reference: bool = False
+) -> pd.DataFrame:
     rows = []
     for key, g in calibrated[calibrated["calibrated"]].groupby(list(by), sort=True):
         p, y = g["p"].to_numpy(), g["y"].to_numpy()
@@ -64,6 +66,7 @@ def score_table(calibrated: pd.DataFrame, by: Sequence[str]) -> pd.DataFrame:
                 "brier": mt.brier(p, y),
                 "log_loss": mt.log_loss(p, y),
                 "ece": mt.expected_calibration_error(p, y),
+                "ece_noise_p95": mt.ece_noise_reference(p) if with_noise_reference else None,
             }
         )
     return pd.DataFrame(rows)

@@ -70,6 +70,20 @@ def expected_calibration_error(p: np.ndarray, y: np.ndarray, n_bins: int = 10) -
     )
 
 
+def ece_noise_reference(p: np.ndarray, n_bins: int = 10, n_sims: int = 200, seed: int = 0) -> float:
+    """95th percentile of the ECE that a PERFECTLY calibrated model with these same probabilities would show
+    on a sample of this size. An observed ECE below it is indistinguishable from sampling noise."""
+    p = np.asarray(p, float)
+    if len(p) == 0:
+        return float("nan")
+    rng = np.random.default_rng(seed)
+    sims = [
+        expected_calibration_error(p, (rng.uniform(size=len(p)) < p).astype(int), n_bins)
+        for _ in range(n_sims)
+    ]
+    return float(np.quantile(sims, 0.95))
+
+
 @dataclass(frozen=True)
 class Interval:
     estimate: float
