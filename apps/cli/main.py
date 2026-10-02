@@ -6,6 +6,13 @@ jevs experiment exp001a [--provider synthetic] [--no-download] [--workers 4]
 
 from __future__ import annotations
 
+import os
+
+# One BLAS/OpenMP thread per process: the experiment already runs one process per competition, and nested
+# thread pools only oversubscribe the CPUs. Must be set before numpy/scipy are imported.
+for _var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_var, "1")
+
 import argparse
 import logging
 import sys
