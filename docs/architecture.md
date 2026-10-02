@@ -109,8 +109,8 @@ class Capability(StrEnum):
 @dataclass(frozen=True)
 class ProviderInfo:
     name: str
-    capabilities: frozenset[Capability]   # cargadas desde config/providers.yaml, nunca supuestas
-    priority: int                          # para reconciliación y failover
+    capabilities: frozenset[Capability]  # cargadas desde config/providers.yaml, nunca supuestas
+    priority: int  # para reconciliación y failover
     license_note: str
 
 
