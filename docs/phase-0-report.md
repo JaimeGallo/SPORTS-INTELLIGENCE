@@ -1,6 +1,7 @@
 # Fase 0: informe de auditoría y propuesta
 
-Fecha: 2026-10-02. Estado: **pendiente de aprobación**. No se ha implementado código.
+Fecha: 2026-10-02. Estado: **aprobado** el 2026-10-02 (EXP-001a con PostgreSQL; proveedor de estadísticas
+se decide tras el spike; The Odds API se contrata). Implementación de EXP-001a en curso.
 
 ## 1. Auditoría del repositorio
 

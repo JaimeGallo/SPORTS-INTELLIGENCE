@@ -1,7 +1,14 @@
-# Modelo de datos propuesto (Fase 0)
+# Modelo de datos
 
-Estado: **propuesta, pendiente de aprobación**. PostgreSQL 16. Las migraciones reales se escriben con
-Alembic en la Fase 4.
+Estado: **implementado para EXP-001a** en `packages/storage/schema.py` (migración Alembic `0001`).
+Este documento fue la propuesta de la Fase 0; las diferencias con lo implementado se resumen aquí:
+
+- No hay tabla `match_results`: los goles (FT y 1T) son una estadística más en `match_statistics`
+  (`stat_key = 'goals'`), con el mismo `available_at` y la misma procedencia que los córners.
+- `matches.kickoff_time_known` marca los partidos cuya fuente no da hora (temporadas antiguas de
+  football-data.co.uk); para ellos se asume la hora más tardía configurada, que es la opción conservadora.
+- `players`, `match_events` y `prediction_distributions` llegan con las fases de alineaciones y live.
+- `paper_bets` y `predictions` guardan el `backtest_run_id`; un mismo run reejecutado reemplaza sus filas.
 
 ## Principios
 
@@ -71,17 +78,6 @@ CREATE TABLE provider_entity_map (              -- un único mapeo para todos lo
 ### Hechos del partido
 
 ```sql
-CREATE TABLE match_results (
-    match_id         text NOT NULL REFERENCES matches,
-    source_id        text NOT NULL,
-    goals_home_ht    smallint, goals_away_ht smallint,
-    goals_home_ft    smallint, goals_away_ft smallint,
-    available_at     timestamptz NOT NULL,
-    raw_payload_id   text,
-    supersedes_id    bigint,
-    id               bigserial PRIMARY KEY
-);
-
 CREATE TABLE match_statistics (                 -- formato largo: extensible sin migraciones
     id               bigserial PRIMARY KEY,
     match_id         text NOT NULL REFERENCES matches,
@@ -219,7 +215,7 @@ CREATE TABLE data_quality_events (id bigserial PRIMARY KEY, match_id text, sourc
 ## Tablas del prompt que no se crean como tablas
 
 - `team_statistics`, `team_form`, `head_to_head`, `prediction_features`: son **features derivadas**
-  y se recalculan de forma point-in-time desde `match_results` y `match_statistics`; guardarlas como
+  y se recalculan de forma point-in-time desde `match_statistics`; guardarlas como
   tablas mutables invita al leakage. Su resultado queda congelado en `feature_snapshots`.
 - `market_lines`: la línea es una columna de `odds_snapshots` y `predictions`.
 - `prediction_results`, `backtest_predictions`: cubiertas por `settlements` y por

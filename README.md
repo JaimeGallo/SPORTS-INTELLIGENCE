@@ -13,9 +13,20 @@ mercado y detecta diferencias estadísticamente interesantes.
 
 ## Estado
 
-**Fase 0 (auditoría y propuesta), pendiente de aprobación.** Todavía no hay código.
+**EXP-001a implementado** (fases 1 a 12 del plan, solo lo necesario para el experimento): ingesta a
+PostgreSQL, calidad de datos, Feature Store point-in-time, modelos de goles y córners, backtest
+walk-forward, calibración, Odds Engine, Edge Engine y simulación paper. Verificado con datos sintéticos;
+falta la ejecución con datos reales (ver [EXP-001a](experiments/exp001a/README.md)).
 
-- [Informe de la Fase 0](docs/phase-0-report.md): auditoría, estrategia de datos, primer experimento, decisiones pendientes
+```bash
+python -m venv .venv && .venv/bin/pip install -e ".[dev]"
+export DATABASE_URL=postgresql+psycopg://postgres@127.0.0.1:5432/jevs
+.venv/bin/jevs experiment exp001a
+.venv/bin/pytest            # TEST_DATABASE_URL activa también los tests de integración
+```
+
+- [EXP-001a](experiments/exp001a/README.md): qué hace, cómo ejecutarlo y limitaciones
+- [Informe de la Fase 0](docs/phase-0-report.md): auditoría, estrategia de datos, primer experimento, decisiones
 - [Arquitectura](docs/architecture.md)
 - [Fuentes de datos](docs/data-sources.md)
 - [Modelo de datos](docs/data-model.md)
