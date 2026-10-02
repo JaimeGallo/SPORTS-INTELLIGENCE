@@ -1,7 +1,7 @@
-"""FootyStats adapter contract tests on a HANDMADE response with fictional clubs.
+"""FootyStats adapter contract tests.
 
-The field names follow FootyStats' public documentation; they must be confirmed with a real response
-(ADR-0008). When the spike runs, save a real (key-free) response next to this fixture and add it here.
+Two fixtures: a HANDMADE response with fictional clubs (pagination, timings, edge cases) and a REAL, key-free
+`league-matches` excerpt saved in the ADR-0008 spike (Premier League 2024/25, unmodified).
 """
 
 from __future__ import annotations
@@ -23,6 +23,12 @@ from packages.providers.http import HttpStatusError, RateLimiter
 
 FIXTURE = json.loads(
     (Path(__file__).parent / "fixtures" / "footystats_league_matches_sample.json").read_text()
+)
+REAL = json.loads(
+    (Path(__file__).parent / "fixtures" / "footystats_league_matches_real_epl_2425.json").read_text()
+)
+ENG = CompetitionConfig(
+    competition_key="ENG-PL", name="Premier League", country="ENG", footystats_season_ids={"2024-2025": 12325}
 )
 COL = CompetitionConfig(
     competition_key="COL-PA", name="Primera A", country="COL", footystats_season_ids={"2024": 11111}
@@ -131,3 +137,53 @@ def test_season_labels() -> None:
     assert season_label_from_year(20232024) == "2023-2024"
     with pytest.raises(DataError):
         season_label_from_year(20232025)
+
+
+def test_real_response_maps_every_required_field() -> None:
+    provider = _provider(FakeTransport(REAL["league-matches"]))
+    matches = provider.parse(provider.fetch_season(ENG, "2024-2025"), ENG, "2024-2025")
+    first = matches[0]
+    assert (first.home_team, first.away_team) == ("Manchester United", "Fulham")
+    assert first.missing_fields == ()
+    assert first.stats[(StatKey.GOALS, Period.FULL_TIME, Side.HOME)] == 1
+    assert first.stats[(StatKey.CORNERS, Period.FULL_TIME, Side.AWAY)] == 8
+    assert first.stats[(StatKey.CORNERS, Period.FIRST_HALF, Side.HOME)] == 2
+    assert first.stats[("shots_on_target", Period.FULL_TIME, Side.HOME)] == 5
+    odds = {(o.market_key, o.line, o.selection): o.decimal_odds for o in first.odds}
+    assert odds[("goals_ft_total", 2.5, Selection.OVER)] == 1.58
+    assert odds[("goals_1h_total", 1.5, Selection.UNDER)] == 1.62
+    assert odds[("corners_ft_total", 10.5, Selection.OVER)] == 1.7
+
+
+def test_real_first_half_split_inconsistent_with_total_is_dropped() -> None:
+    provider = _provider(FakeTransport(REAL["league-matches"]))
+    matches = provider.parse(provider.fetch_season(ENG, "2024-2025"), ENG, "2024-2025")
+    leicester = matches[1]  # home: 1 corner in the 1st half, 0 in the 2nd, 0 in total
+    assert (StatKey.CORNERS, Period.FIRST_HALF, Side.HOME) not in leicester.stats
+    assert "corners_1H_home" in leicester.missing_fields
+    assert "home_1h_corners_inconsistent_with_total" in leicester.notes
+    assert leicester.stats[(StatKey.CORNERS, Period.FIRST_HALF, Side.AWAY)] == 4  # 4 + 5 = 9: consistent
+    unrecorded = matches[2]  # -1: split not recorded
+    assert {"corners_1H_home", "corners_1H_away"} <= set(unrecorded.missing_fields)
+    assert unrecorded.stats[(StatKey.CORNERS, Period.FULL_TIME, Side.HOME)] == 6
+
+
+def test_league_not_chosen_gives_a_clear_error() -> None:
+    def not_chosen(url: str) -> bytes:
+        raise HttpStatusError(417, "<redacted>")
+
+    provider = FootyStatsProvider(SECRET, transport=not_chosen, limiter=RateLimiter(100, 1.0))
+    with pytest.raises(DataError, match="not enabled for this key") as info:
+        provider.fetch_season(COL, "2024")
+    assert SECRET not in str(info.value)
+
+
+def test_rate_limit_metadata_does_not_change_the_stored_content() -> None:
+    def page_with(remaining: int) -> list[dict[str, object]]:
+        page = json.loads(json.dumps(REAL["league-matches"][0]))
+        page["metadata"] = {"request_limit": "1800", "request_remaining": str(remaining)}
+        return [page]
+
+    first = _provider(FakeTransport(page_with(1799))).fetch_season(ENG, "2024-2025")
+    second = _provider(FakeTransport(page_with(1712))).fetch_season(ENG, "2024-2025")
+    assert first.content == second.content

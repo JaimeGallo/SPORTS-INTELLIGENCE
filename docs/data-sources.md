@@ -146,5 +146,6 @@ Coste: 0. Duración estimada: medio día.
 
 La evaluación de fuentes para la Liga BetPlay (FootyStats, API-Football, Sportradar, Opta, OpenFoot) y la
 decisión propuesta están en [ADR-0008](adr/0008-colombia-focus-and-footystats.md). El adaptador
-`packages/providers/footystats.py` está implementado y probado con respuestas de ejemplo; falta verificarlo
-con una key real.
+`packages/providers/footystats.py` está implementado y verificado contra respuestas reales con la key de
+prueba (Premier League 2018/19 a 2024/25); los resultados del spike están en la sección 6 del ADR. Colombia
+no está incluida en esa key.

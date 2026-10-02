@@ -37,12 +37,12 @@ providers:
   footystats:
     priority: 30
     license_note: "FootyStats paid API. Commercial use and redistribution terms to be confirmed (ADR-0008)."
-    capabilities:                  # [verify] every entry in the provider spike
+    capabilities:                  # checked in the ADR-0008 spike (EPL 2018/19 to 2024/25 with the test key)
       fixtures: true
       results: true
       halftime_score: true
       match_stats: true
-      match_stats_by_half: true    # explicit first-half corners, or derived from corner timings
+      match_stats_by_half: true    # team_*_fh_corners; splits that contradict the total are dropped
       corners: true
       lineups: false
       live_events: false

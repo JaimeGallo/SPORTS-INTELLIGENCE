@@ -1,9 +1,14 @@
 """FootyStats adapter (https://footystats.org/api, base https://api.football-data-api.com).
 
-STATUS: built from FootyStats' public documentation as seen during the Phase 0 evaluation, WITHOUT a real
-key or response. Every field name lives in `FIELDS` / `ODDS_FIELDS` below and must be confirmed in the
-provider spike (ADR-0008) before trusting ingested data. Unknown or missing values are reported as missing,
-never invented.
+STATUS: field names in `FIELDS` / `ODDS_FIELDS` confirmed against real `league-matches` responses in the
+ADR-0008 spike (Premier League 2018/19 to 2024/25, Liga MX 2019/20). Unknown or missing values are reported
+as missing, never invented.
+
+Spike findings that shape the parser:
+- `league-matches` has NO per-corner minute list; `team_*_corner_timings` is kept only in case a richer
+  endpoint provides it. First-half corners come from `team_*_fh_corners`.
+- In 1% to 5% of matches per season `fh + 2h != full time` for a side. Those first-half values are
+  dropped (reported missing, with a note): a split that contradicts the total cannot be trusted.
 
 Point-in-time policy for FootyStats odds: the API does not say which bookmaker quoted them or when, so they
 are stored under the pseudo-bookmaker `footystats_reference` with `is_closing=True` (available only at
@@ -34,7 +39,7 @@ from packages.providers.base import (
     Side,
     load_provider_info,
 )
-from packages.providers.http import RateLimiter, ResilientGetter, Transport, urllib_transport
+from packages.providers.http import HttpStatusError, RateLimiter, ResilientGetter, Transport, urllib_transport
 
 log = logging.getLogger(__name__)
 
@@ -42,8 +47,9 @@ BASE_URL = "https://api.football-data-api.com"
 MAX_PER_PAGE = 500
 COMPLETE_STATUS = "complete"
 REFERENCE_BOOKMAKER = "footystats_reference"
+NOT_CHOSEN_STATUS = 417  # FootyStats answers 417 "League is not chosen by the user"
 
-# (stat, period, side) <- field. [verify] all names against a real response.
+# (stat, period, side) <- field. Verified against real responses (ADR-0008 spike).
 FIELDS: dict[tuple[StatKey | str, Period, Side], str] = {
     (StatKey.GOALS, Period.FULL_TIME, Side.HOME): "homeGoalCount",
     (StatKey.GOALS, Period.FULL_TIME, Side.AWAY): "awayGoalCount",
@@ -66,10 +72,12 @@ REQUIRED = (
 )
 # Minute-by-minute corner lists, used to DERIVE first-half corners when the explicit field is missing.
 CORNER_TIMINGS = {Side.HOME: "team_a_corner_timings", Side.AWAY: "team_b_corner_timings"}
+# Second-half corners, used only to check that the first-half value is consistent with the total.
+SECOND_HALF_CORNERS = {Side.HOME: "team_a_2h_corners", Side.AWAY: "team_b_2h_corners"}
 
 
 def _odds_fields() -> dict[str, tuple[str, float, Selection]]:
-    """field -> (market_key, line, selection). [verify] names; FootyStats encodes 2.5 as '25'."""
+    """field -> (market_key, line, selection). Verified names; FootyStats encodes 2.5 as '25'."""
     out: dict[str, tuple[str, float, Selection]] = {}
     for line in (0.5, 1.5, 2.5, 3.5, 4.5):
         code = f"{int(line * 10):02d}"
@@ -161,6 +169,13 @@ def parse_matches(
             if value is not None:
                 stats[key] = value
         derived: list[str] = []
+        for side, name in SECOND_HALF_CORNERS.items():
+            key = (StatKey.CORNERS, Period.FIRST_HALF, side)
+            full = stats.get((StatKey.CORNERS, Period.FULL_TIME, side))
+            second = _count(m.get(name))
+            if key in stats and full is not None and second is not None and stats[key] + second != full:
+                del stats[key]
+                derived.append(f"{side.value}_1h_corners_inconsistent_with_total")
         for side, name in CORNER_TIMINGS.items():
             key = (StatKey.CORNERS, Period.FIRST_HALF, side)
             full = stats.get((StatKey.CORNERS, Period.FULL_TIME, side))
@@ -231,7 +246,15 @@ class FootyStatsProvider(HistoricalMatchProvider):
         safe_query = urlencode(sorted(params.items()))
         safe_url = f"{BASE_URL}/{endpoint}?{safe_query}"
         url = f"{BASE_URL}/{endpoint}?{urlencode([('key', self._key), *sorted(params.items())])}"
-        body = self._http.get(url, safe_url=safe_url)
+        try:
+            body = self._http.get(url, safe_url=safe_url)
+        except HttpStatusError as exc:
+            if exc.status == NOT_CHOSEN_STATUS:
+                raise DataError(
+                    f"FootyStats league not enabled for this key ({safe_url}): choose it in the FootyStats "
+                    "account (changes can take up to 1 hour)"
+                ) from None
+            raise
         try:
             data = json.loads(body)
         except json.JSONDecodeError as exc:
@@ -267,6 +290,14 @@ class FootyStatsProvider(HistoricalMatchProvider):
         page, max_page = 1, 1
         while page <= max_page:
             data = self._get("league-matches", season_id=season_id, page=page, max_per_page=MAX_PER_PAGE)
+            # `metadata` holds the rate-limit counters, which change on every call: storing it would give
+            # the same season a new content hash (and dataset version) on each download.
+            meta = data.pop("metadata", None) or {}
+            remaining = meta.get("request_remaining")
+            log.info(
+                "footystats page",
+                extra={"season_id": season_id, "page": page, "requests_remaining": remaining},
+            )
             pages.append(data)
             pager = data.get("pager") or {}
             max_page = int(pager.get("max_page", 1) or 1)

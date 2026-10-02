@@ -12,18 +12,44 @@ database:
 # enabled_competitions: nothing is hardcoded in code. Champions League has no football-data.co.uk
 # file; it arrives with the paid stats provider (ADR-0007).
 competitions:
-  - {competition_key: ENG-PL, name: Premier League, country: ENG, football_data_div: E0}
+  - competition_key: ENG-PL
+    name: Premier League
+    country: ENG
+    football_data_div: E0
+    footystats_season_ids:          # ids from `jevs footystats leagues` (ADR-0008 spike)
+      "2018-2019": 1625
+      "2019-2020": 2012
+      "2020-2021": 4759
+      "2021-2022": 6135
+      "2022-2023": 7704
+      "2023-2024": 9660
+      "2024-2025": 12325
   - {competition_key: ESP-LL, name: La Liga, country: ESP, football_data_div: SP1}
   - {competition_key: ITA-SA, name: Serie A, country: ITA, football_data_div: I1}
   - {competition_key: GER-BL, name: Bundesliga, country: GER, football_data_div: D1}
   - {competition_key: FRA-L1, name: Ligue 1, country: FRA, football_data_div: F1}
   - {competition_key: EUR-UCL, name: Champions League, country: EUR, enabled: false}
   # Liga BetPlay DIMAYOR (ADR-0008). Calendar-year seasons ('2024'), Apertura + Clausura.
-  # Fill the FootyStats season ids with `jevs footystats leagues --country Colombia`.
+  # Season ids from FootyStats' full league list (ADR-0008 spike). Downloading them needs a key with
+  # Colombia Primera A chosen in the FootyStats account: the test key answers HTTP 417.
   - competition_key: COL-PA
     name: Categoría Primera A (Liga BetPlay)
     country: COL
-    footystats_season_ids: {}
+    footystats_season_ids:
+      "2013": 483
+      "2014": 482
+      "2015": 481
+      "2016": 480
+      "2017": 479
+      "2018": 1069
+      "2019": 1828
+      "2020": 3638
+      "2021": 5421
+      "2022": 6905
+      "2023": 8936
+      "2024": 10997
+      "2025": 14086
+      "2026": 16614
 
 ingestion:
   raw_dir: data/raw
