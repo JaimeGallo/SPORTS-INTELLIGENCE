@@ -1,0 +1,35 @@
+# JEV Sports Intelligence: default configuration.
+# Precedence: this file < profile (--config) < env JEVS__SECTION__KEY < CLI options.
+# Secrets NEVER go in this file: use environment variables / .env (see .env.example).
+
+app:
+  name: jev-sports-intelligence
+  environment: local
+
+database:
+  url: postgresql+psycopg://postgres@127.0.0.1:5432/jevs   # overridden by DATABASE_URL
+
+# enabled_competitions: nothing is hardcoded in code. Champions League has no football-data.co.uk
+# file; it arrives with the paid stats provider (ADR-0007).
+competitions:
+  - {competition_key: ENG-PL, name: Premier League, country: ENG, football_data_div: E0}
+  - {competition_key: ESP-LL, name: La Liga, country: ESP, football_data_div: SP1}
+  - {competition_key: ITA-SA, name: Serie A, country: ITA, football_data_div: I1}
+  - {competition_key: GER-BL, name: Bundesliga, country: GER, football_data_div: D1}
+  - {competition_key: FRA-L1, name: Ligue 1, country: FRA, football_data_div: F1}
+  - {competition_key: EUR-UCL, name: Champions League, country: EUR, enabled: false}
+
+ingestion:
+  raw_dir: data/raw
+  manifests_dir: data/manifests
+  provider_timezone: Europe/London
+  result_delay_hours: 3.0           # result/stats knowable 3h after kickoff
+  unknown_kickoff_local_time: "23:59"   # older seasons have no kickoff time: assume the latest
+  prematch_odds_lead_hours: 24.0    # football-data.co.uk pre-match odds are collected 1-3 days before
+
+prediction:
+  lead_minutes: 60                  # pre-match predictions are made 60 min before kickoff
+
+logging:
+  level: INFO
+  json_format: false
