@@ -1,0 +1,55 @@
+# EXP-001a: calibrated goals (FT, 1H) and corners (FT) probabilities from football-data.co.uk, without
+# leakage, compared against O/U 2.5 goals odds. See docs/phase-0-report.md, section 4.
+experiment: exp001a
+provider: football_data_csv          # football_data_csv | synthetic
+competitions: [ENG-PL, ESP-LL, ITA-SA, GER-BL, FRA-L1]
+
+seasons:                              # ingested, oldest first
+  - 2015-2016
+  - 2016-2017
+  - 2017-2018
+  - 2018-2019
+  - 2019-2020
+  - 2020-2021
+  - 2021-2022
+  - 2022-2023
+  - 2023-2024
+  - 2024-2025
+  - 2025-2026
+predict_seasons:                      # 2015-16 is history only
+  - 2016-2017
+  - 2017-2018
+  - 2018-2019
+  - 2019-2020
+  - 2020-2021
+  - 2021-2022
+  - 2022-2023
+  - 2023-2024
+  - 2024-2025
+  - 2025-2026
+validation_seasons: [2017-2018, 2018-2019, 2019-2020, 2020-2021, 2021-2022, 2022-2023, 2023-2024]
+test_seasons: [2024-2025, 2025-2026]  # untouched until the final evaluation
+
+targets:                              # stat/period -> families evaluated
+  - {stat: goals, period: FT, families: [league_freq, poisson, dixon_coles, negbin]}
+  - {stat: goals, period: 1H, families: [league_freq, poisson, negbin]}
+  - {stat: corners, period: FT, families: [league_freq, poisson, negbin]}
+
+ratings_grid:                         # selected on validation seasons only
+  xi: [0.0, 0.0019, 0.0039]           # decay per day: none, half-life ~1y, ~6 months
+  window_days: [730]
+  ridge: [1.0, 4.0]
+  min_matches: 60
+
+calibrators: [identity, platt, isotonic]
+calibration_min_rows: 300
+
+market:
+  market_key: goals_ft_total
+  line: 2.5
+  prematch_bookmakers: [pinnacle, market_avg, bet365]
+  closing_bookmakers: [pinnacle, market_avg, bet365]
+  min_edge: 0.03
+  stake: 1.0
+
+bootstrap: {n: 1000, seed: 7}

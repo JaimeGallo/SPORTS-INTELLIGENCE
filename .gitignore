@@ -1,0 +1,20 @@
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Data (only small fixtures are versioned)
+data/*
+!data/fixtures/
+
+# Node
+node_modules/
+dist/

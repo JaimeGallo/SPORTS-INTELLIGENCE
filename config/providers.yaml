@@ -1,0 +1,36 @@
+# Provider capability matrix (ADR-0002). Capabilities are DECLARED here, never assumed in code.
+# A capability marked false makes the adapter raise CapabilityNotSupported.
+# Keep this file in sync with docs/data-sources.md; [verify] notes come from the Phase 0 evaluation.
+providers:
+  football_data_csv:
+    priority: 20
+    license_note: "football-data.co.uk free CSVs. No warranty; check terms before redistribution."
+    capabilities:
+      fixtures: true
+      results: true
+      halftime_score: true
+      match_stats: true            # shots, shots on target, corners, fouls, cards (full time only)
+      match_stats_by_half: false   # no per-half corners
+      corners: true
+      lineups: false
+      live_events: false
+      odds_prematch: true          # 1X2, O/U 2.5 and AH only, collected 1-3 days before kickoff
+      odds_closing: true           # from 2019/20 onwards
+      odds_live: false
+      odds_historical: true
+  synthetic:
+    priority: 99
+    license_note: "Generated data with a known process. Says nothing about real football."
+    capabilities:
+      fixtures: true
+      results: true
+      halftime_score: true
+      match_stats: true
+      match_stats_by_half: false
+      corners: true
+      lineups: false
+      live_events: false
+      odds_prematch: true
+      odds_closing: true
+      odds_live: false
+      odds_historical: true
