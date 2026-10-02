@@ -141,3 +141,10 @@ Coste: 0. Duración estimada: medio día.
 - [The Odds API: documentación v4](https://the-odds-api.com/liveapi/guides/v4/)
 - [Comparativa de precios de APIs de cuotas 2026 (OddsPapi)](https://oddspapi.io/blog/odds-api-pricing-2026-comparison/)
 - [Sportradar Soccer: Match Stats API](https://docs.sportradar.com/soccer-media/static-endpoints-restful/match-stats-api)
+
+## 6. Colombia (añadido el 2026-10-02)
+
+La evaluación de fuentes para la Liga BetPlay (FootyStats, API-Football, Sportradar, Opta, OpenFoot) y la
+decisión propuesta están en [ADR-0008](adr/0008-colombia-focus-and-footystats.md). El adaptador
+`packages/providers/footystats.py` está implementado y probado con respuestas de ejemplo; falta verificarlo
+con una key real.
