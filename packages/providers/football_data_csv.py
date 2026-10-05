@@ -14,6 +14,7 @@ from __future__ import annotations
 import csv
 import io
 import math
+import urllib.error
 import urllib.request
 from datetime import UTC, date, datetime, time
 from pathlib import Path
@@ -33,6 +34,10 @@ from packages.providers.base import (
 )
 
 BASE_URL = "https://www.football-data.co.uk/mmz4281"
+ALLOWLIST_HINT = (
+    "If outbound hosts are restricted, allow both www.football-data.co.uk and football-data.co.uk "
+    "(the first redirects to the second), or put the files in the cache and run with --no-download."
+)
 
 # (stat key, period, side) <- column
 STAT_COLUMNS: dict[str, tuple[StatKey | str, Period, Side]] = {
@@ -187,8 +192,13 @@ class FootballDataCsvProvider(HistoricalMatchProvider):
             fetched_at = datetime.fromtimestamp(path.stat().st_mtime, UTC)
         elif self._allow_download:
             request = urllib.request.Request(endpoint, headers={"User-Agent": "jev-sports-intelligence/0.1"})
-            with urllib.request.urlopen(request, timeout=60) as response:
-                content = response.read()
+            try:
+                with urllib.request.urlopen(request, timeout=60) as response:
+                    content = response.read()
+            except (urllib.error.URLError, OSError) as exc:
+                raise DataError(
+                    f"cannot download {endpoint}: {getattr(exc, 'reason', exc)}. {ALLOWLIST_HINT}"
+                ) from None
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content)
             fetched_at = datetime.now(UTC)

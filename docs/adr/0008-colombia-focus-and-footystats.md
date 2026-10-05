@@ -136,6 +136,13 @@ Otros hallazgos aplicados al código:
 - HTTP 417 (liga no elegida) da ahora un error claro en lugar de un "HTTP 417" genérico.
 - Límite real del plan: 1.800 peticiones por hora (cabecera `request_limit`).
 
+**Reverificación (2026-10-05, misma key de prueba)**: el catálogo sigue mostrando Colombia Primera A (14
+temporadas) y descargarla sigue respondiendo HTTP 417. Premier League 2024/25 devuelve 380 partidos con todos
+los campos de `FIELDS` / `ODDS_FIELDS`, sin `team_*_corner_timings`, y 98,2% de córners 1T explícitos (373 de
+380), igual que en el spike. Cuota restante de la key: 1.791 de 1.800 por hora. Conclusión sin cambios.
+`football-data.co.uk` (sin `www`) sigue bloqueado: para el EXP-001a de referencia hay que permitir ambos hosts,
+`www.football-data.co.uk` y `football-data.co.uk`, porque el primero redirige al segundo.
+
 **Estado**: sigue **propuesto**. Siguiente paso: activar Colombia Primera A en la cuenta de FootyStats (o una
 key de pago), repetir los puntos 2 y 4 con Colombia y conseguir una tercera fuente para dirimir los córners.
 
