@@ -34,3 +34,20 @@ providers:
       odds_closing: true
       odds_live: false
       odds_historical: true
+  footystats:
+    priority: 30
+    license_note: "FootyStats paid API. Commercial use and redistribution terms to be confirmed (ADR-0008)."
+    capabilities:                  # checked in the ADR-0008 spike (EPL 2018/19 to 2024/25 with the test key)
+      fixtures: true
+      results: true
+      halftime_score: true
+      match_stats: true
+      match_stats_by_half: true    # team_*_fh_corners; splits that contradict the total are dropped
+      corners: true
+      lineups: false
+      live_events: false
+      odds_prematch: false         # bookmaker and timing of FootyStats odds are not documented
+      odds_closing: false
+      odds_live: false
+      odds_historical: false
+      odds_reference: true         # stored as 'footystats_reference', evaluation only

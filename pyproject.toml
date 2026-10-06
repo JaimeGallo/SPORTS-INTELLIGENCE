@@ -63,3 +63,4 @@ plugins = ["pydantic.mypy"]
 
 [tool.ruff.lint.per-file-ignores]
 "packages/experiments/report.py" = ["E501"]   # markdown table templates
+"apps/cli/main.py" = ["E402"]                 # thread env vars must be set before numpy is imported

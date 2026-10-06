@@ -29,6 +29,7 @@ from packages.backtesting.walk_forward import GenerationResult, generate_predict
 from packages.calibration import metrics as mt
 from packages.common.config import PROJECT_ROOT, AppConfig, config_hash, read_yaml
 from packages.common.ids import digest
+from packages.common.secrets import get_secret
 from packages.edge.engine import EdgeRules, SignalState, expected_value
 from packages.features.store import FEATURE_VERSION, FeatureStore, load_match_facts
 from packages.ingestion.engine import HistoricalDataEngine
@@ -37,6 +38,7 @@ from packages.models.count_models import Family, ModelSpec
 from packages.models.team_ratings import RatingsConfig
 from packages.providers.base import HistoricalMatchProvider
 from packages.providers.football_data_csv import FootballDataCsvProvider
+from packages.providers.footystats import FootyStatsProvider
 from packages.providers.synthetic import SyntheticProvider
 from packages.storage import schema as s
 
@@ -137,6 +139,8 @@ def build_specs(cfg: ExperimentConfig) -> list[ModelSpec]:
 def make_provider(cfg: ExperimentConfig, app: AppConfig, allow_download: bool) -> HistoricalMatchProvider:
     if cfg.provider == "synthetic":
         return SyntheticProvider(cfg.seasons, seed=cfg.synthetic_seed)
+    if cfg.provider == "footystats":
+        return FootyStatsProvider(get_secret("FOOTYSTATS_API_KEY") or "")
     if cfg.provider == "football_data_csv":
         return FootballDataCsvProvider(
             PROJECT_ROOT / app.ingestion.raw_dir / "cache", allow_download=allow_download

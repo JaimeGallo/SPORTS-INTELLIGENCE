@@ -1,0 +1,49 @@
+# EXP-001a control: the FootyStats EPL variant (config.footystats-epl.yaml) with football-data.co.uk data.
+# Same league, seasons, validation/test split, model grid and calibrators; only the data source changes.
+# Differences forced by the source: no first-half corners (dropped), real bookmaker odds (Pinnacle, market
+# average, bet365; pre-match and closing) instead of FootyStats' closing reference.
+experiment: exp001a
+provider: football_data_csv
+competitions: [ENG-PL]
+
+seasons:                              # ingested, oldest first
+  - 2018-2019
+  - 2019-2020
+  - 2020-2021
+  - 2021-2022
+  - 2022-2023
+  - 2023-2024
+  - 2024-2025
+predict_seasons:                      # 2018-19 is history only
+  - 2019-2020
+  - 2020-2021
+  - 2021-2022
+  - 2022-2023
+  - 2023-2024
+  - 2024-2025
+validation_seasons: [2020-2021, 2021-2022, 2022-2023]
+test_seasons: [2023-2024, 2024-2025]  # untouched until the final evaluation
+
+targets:
+  - {stat: goals, period: FT, families: [league_freq, poisson, dixon_coles, negbin]}
+  - {stat: goals, period: 1H, families: [league_freq, poisson, negbin]}
+  - {stat: corners, period: FT, families: [league_freq, poisson, negbin]}
+
+ratings_grid:
+  xi: [0.0, 0.0019, 0.0039]
+  window_days: [730]
+  ridge: [1.0, 4.0]
+  min_matches: 60
+
+calibrators: [identity, platt, isotonic]
+calibration_min_rows: 300
+
+market:
+  market_key: goals_ft_total
+  line: 2.5
+  prematch_bookmakers: [pinnacle, market_avg, bet365]
+  closing_bookmakers: [pinnacle, market_avg, bet365]
+  min_edge: 0.03
+  stake: 1.0
+
+bootstrap: {n: 1000, seed: 7}

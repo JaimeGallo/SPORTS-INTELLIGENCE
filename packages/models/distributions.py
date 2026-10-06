@@ -72,6 +72,17 @@ def negative_binomial(
     return _finalize(pmf)
 
 
+def dixon_coles_rho_limits(lam_home: float, lam_away: float) -> tuple[float, float]:
+    """Interval of rho for which the four low-score factors stay positive for these lambdas.
+
+    The factors are 1 - l_h*l_a*rho (0-0), 1 + l_h*rho (0-1), 1 + l_a*rho (1-0) and 1 - rho (1-1). A rho
+    fitted on the training matches only respects the lambdas seen there; a lopsided fixture can fall outside.
+    """
+    lower = -0.999 / max(lam_home, lam_away)
+    upper = min(0.999, 0.999 / (lam_home * lam_away))
+    return lower, upper
+
+
 def dixon_coles_total(lam_home: float, lam_away: float, rho: float, max_goals: int = 15) -> CountDistribution:
     """Total goals under Dixon-Coles (1997): independent Poissons with a low-score correction."""
     k = np.arange(max_goals + 1)

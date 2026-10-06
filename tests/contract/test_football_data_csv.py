@@ -5,12 +5,15 @@ When network access to football-data.co.uk is enabled, real files should be adde
 
 from __future__ import annotations
 
+import urllib.error
+import urllib.request
 from datetime import date, time
 from pathlib import Path
 
 import pytest
 
 from packages.common.config import CompetitionConfig
+from packages.common.errors import DataError
 from packages.data_quality.engine import check_matches
 from packages.markets.catalog import Period, Selection, StatKey
 from packages.providers.base import RawPayload, Side
@@ -80,3 +83,20 @@ def test_quality_engine_rejects_bad_odds_and_inconsistent_stats() -> None:
     assert {o.bookmaker for o in third.odds} == {"pinnacle"}
     kappa = next(m for m in report.matches if m.away_team == "Team Kappa")
     assert kappa.stats == {}
+
+
+def test_blocked_download_names_the_url_and_both_hosts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def blocked(*args: object, **kwargs: object) -> None:
+        raise urllib.error.URLError(OSError("Tunnel connection failed: 403 Forbidden"))
+
+    monkeypatch.setattr(urllib.request, "urlopen", blocked)
+    provider = FootballDataCsvProvider(tmp_path, allow_download=True)
+    with pytest.raises(DataError) as info:
+        provider.fetch_season(ENG, "2023-2024")
+    message = str(info.value)
+    assert "https://www.football-data.co.uk/mmz4281/2324/E0.csv" in message
+    assert "403" in message
+    assert "football-data.co.uk" in message.split("allow both")[1]
+    assert not (tmp_path / "football_data_csv").exists()  # nothing half-written to the cache

@@ -94,3 +94,24 @@ def test_database_rejects_impossible_odds(engine: Engine) -> None:
                 raw_payload_id=raw_id,
             )
         )
+
+
+def test_footystats_ingestion_uses_exact_kickoff_and_reference_odds(engine: Engine, tmp_path: Path) -> None:
+    from tests.contract.test_footystats import COL, FIXTURE, FakeTransport, _provider
+
+    app = AppConfig(competitions=[COL])
+    ingestion = HistoricalDataEngine(engine, app, raw_root=tmp_path)
+    stats = ingestion.ingest(_provider(FakeTransport(FIXTURE["league-matches"])), [COL], ["2024"])
+    assert stats.matches == 3
+    facts = load_match_facts(engine, [COL.competition_key], "footystats")
+    assert len(facts) == 3
+    assert facts["corners_1h_home"].isna().sum() == 1  # the match with incomplete corner timings
+    with engine.connect() as conn:
+        rows = conn.execute(
+            select(s.odds_snapshots.c.available_at, s.matches.c.kickoff_at, s.odds_snapshots.c.bookmaker_id)
+            .join(s.matches, s.matches.c.match_id == s.odds_snapshots.c.match_id)
+            .where(s.odds_snapshots.c.source_id == "footystats")
+        ).all()
+    assert rows and all(
+        available == kickoff and book == "footystats_reference" for available, kickoff, book in rows
+    )

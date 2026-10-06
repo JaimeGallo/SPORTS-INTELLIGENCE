@@ -12,7 +12,7 @@ from enum import StrEnum
 from packages.markets.catalog import Period, Selection, StatKey
 from packages.providers.base import RawMatch, RawOdds, Side
 
-AGGREGATE_BOOKMAKERS = frozenset({"market_max", "market_avg"})
+AGGREGATE_BOOKMAKERS = frozenset({"market_max", "market_avg", "footystats_reference"})
 MAX_PLAUSIBLE = {StatKey.GOALS: 15, StatKey.CORNERS: 35}
 OVERROUND_RANGE = (0.98, 1.30)
 

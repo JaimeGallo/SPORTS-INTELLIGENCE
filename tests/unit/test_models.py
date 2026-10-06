@@ -73,6 +73,24 @@ def test_team_model_beats_league_baseline_on_next_season(facts: pd.DataFrame) ->
     assert losses[Family.POISSON] < losses[Family.LEAGUE_FREQ]
 
 
+def test_dixon_coles_survives_lopsided_fixture_with_extreme_rho(facts: pd.DataFrame) -> None:
+    as_of = _as_of(facts)
+    view = FeatureStore(facts).history(COMP.competition_key, as_of)
+    spec = ModelSpec(StatKey.GOALS, Period.FULL_TIME, Family.DIXON_COLES, RatingsConfig())
+    fitted = fit_model(spec, view.frame, as_of, COMP.competition_key)
+    assert fitted.ratings is not None
+    strong, weak = "strong", "weak"
+    fitted.ratings.attack[strong], fitted.ratings.defence[strong] = 1.5, 0.0
+    fitted.ratings.attack[weak], fitted.ratings.defence[weak] = 0.0, -0.4
+    fitted.rho = -0.245  # the in-sample bound of a league whose largest fitted lambda was ~4.07
+    lam_h, lam_a = fitted.ratings.lambdas(strong, weak)
+    assert lam_h > 4.07 > lam_a
+    prediction = fitted.predict(strong, weak)  # used to raise ModelError
+    assert prediction.distribution.pmf.sum() == pytest.approx(1.0)
+    assert prediction.features["rho"] == -0.245
+    assert -0.245 < prediction.features["rho_used"] < 0
+
+
 def test_prediction_is_pure(facts: pd.DataFrame) -> None:
     as_of = _as_of(facts)
     view = FeatureStore(facts).history(COMP.competition_key, as_of)

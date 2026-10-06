@@ -101,10 +101,13 @@ class FittedModel:
             )
         assert self.ratings is not None
         lam_h, lam_a = self.ratings.lambdas(home_team, away_team)
+        rho_used = self.rho
         if family is Family.POISSON:
             distribution = dist.poisson(lam_h + lam_a)
         elif family is Family.DIXON_COLES:
-            distribution = dist.dixon_coles_total(lam_h, lam_a, self.rho)
+            low, high = dist.dixon_coles_rho_limits(lam_h, lam_a)
+            rho_used = min(max(self.rho, low), high)
+            distribution = dist.dixon_coles_total(lam_h, lam_a, rho_used)
         elif family is Family.NEGBIN:
             distribution = dist.negative_binomial(lam_h + lam_a, self.dispersion)
         else:  # pragma: no cover - exhaustive
@@ -126,6 +129,7 @@ class FittedModel:
             "lambda_home": round(lam_h, 5),
             "lambda_away": round(lam_a, 5),
             "rho": round(self.rho, 5),
+            "rho_used": round(rho_used, 5),
             "dispersion": round(self.dispersion, 5),
         }
         return Prediction(distribution, features)

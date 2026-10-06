@@ -32,6 +32,7 @@ class Capability(StrEnum):
     ODDS_CLOSING = "odds_closing"
     ODDS_LIVE = "odds_live"
     ODDS_HISTORICAL = "odds_historical"
+    ODDS_REFERENCE = "odds_reference"  # odds whose bookmaker/timing is unknown: evaluation only
 
 
 @dataclass(frozen=True)
@@ -88,9 +89,11 @@ class RawMatch:
     away_team: str
     local_date: date
     local_time: time | None  # None when the source has no kickoff time
+    kickoff_utc: datetime | None = None  # exact kickoff when the source gives it (takes precedence)
     stats: dict[tuple[StatKey | str, Period, Side], int] = field(default_factory=dict)
     odds: tuple[RawOdds, ...] = ()
     missing_fields: tuple[str, ...] = ()
+    notes: tuple[str, ...] = ()  # e.g. values derived by the adapter (documented, never silent)
 
 
 @dataclass(frozen=True)

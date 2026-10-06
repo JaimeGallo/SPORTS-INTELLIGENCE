@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from scipy import stats
 
+from packages.common.errors import ModelError
 from packages.markets.catalog import Outcome, Selection, load_markets, settle_total
 from packages.models import distributions as dist
 
@@ -48,6 +49,25 @@ def test_dixon_coles_with_zero_rho_is_poisson_total() -> None:
     assert dc.prob_over(2.5) == pytest.approx(po.prob_over(2.5), abs=1e-6)
     # negative rho (the usual estimate) moves mass towards 0-0 and 1-1
     assert dist.dixon_coles_total(1.5, 1.1, -0.1).pmf[0] > dc.pmf[0]
+
+
+def test_dixon_coles_rho_limits_keep_lopsided_fixtures_valid() -> None:
+    # Real-data failure: rho fitted on the training matches (-0.245), fixture with lambdas 4.309/0.614
+    with pytest.raises(ModelError, match="negative probabilities"):
+        dist.dixon_coles_total(4.309, 0.614, -0.245)
+    low, high = dist.dixon_coles_rho_limits(4.309, 0.614)
+    assert low > -0.245
+    clamped = dist.dixon_coles_total(4.309, 0.614, max(-0.245, low))
+    assert clamped.pmf.sum() == pytest.approx(1.0)
+    assert np.all(clamped.pmf >= 0)
+    # positive rho is bounded by the 0-0 factor: 1 - l_h * l_a * rho
+    low, high = dist.dixon_coles_rho_limits(3.0, 2.5)
+    assert high < 0.25
+    assert dist.dixon_coles_total(3.0, 2.5, min(0.25, high)).pmf.sum() == pytest.approx(1.0)
+    # moderate fixtures are not constrained below the usual |rho| <= 0.25
+    low, high = dist.dixon_coles_rho_limits(1.5, 1.1)
+    assert low < -0.25
+    assert high > 0.25
 
 
 def test_negative_binomial_is_overdispersed_and_tends_to_poisson() -> None:
