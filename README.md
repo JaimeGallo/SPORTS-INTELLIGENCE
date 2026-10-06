@@ -15,10 +15,11 @@ mercado y detecta diferencias estadísticamente interesantes.
 
 **EXP-001a implementado** (fases 1 a 12 del plan, solo lo necesario para el experimento): ingesta a
 PostgreSQL, calidad de datos, Feature Store point-in-time, modelos de goles y córners, backtest
-walk-forward, calibración, Odds Engine, Edge Engine y simulación paper. Verificado con datos sintéticos;
-primera ejecución con datos reales hecha con FootyStats (Premier League 2018/19 a 2024/25); la ejecución
-de referencia con football-data.co.uk sigue bloqueada por la red del entorno (ver
-[EXP-001a](experiments/exp001a/README.md)). Spike de FootyStats y Colombia: [ADR-0008](docs/adr/0008-colombia-focus-and-footystats.md).
+walk-forward, calibración, Odds Engine, Edge Engine y simulación paper. Verificado con datos sintéticos y
+ejecutado con datos reales: referencia con football-data.co.uk (5 ligas, 2015/16 a 2025/26) y variante FootyStats
+(Premier League 2018/19 a 2024/25), comparadas en [EXP-001a](experiments/exp001a/README.md). Resultado: sin leakage y
+calibración agregada correcta, pero los modelos no superan al mercado (sin señal de edge). Spike de FootyStats y Colombia:
+[ADR-0008](docs/adr/0008-colombia-focus-and-footystats.md).
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
